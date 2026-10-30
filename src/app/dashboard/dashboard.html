@@ -1,0 +1,39 @@
+<div class="page-heading"><div><span class="section-kicker">SHOP OVERVIEW</span><h1>Your <em>dashboard.</em></h1><p>A live snapshot of R.K. Tailors.</p></div><a class="gold-button" routerLink="/orders"><i class="bi bi-plus-lg"></i> New order</a></div>
+@if (loading) { <div class="loading-state"><span class="spinner-border spinner-border-sm"></span> Loading live shop data…</div> }
+@if (error) { <div class="alert alert-danger" role="alert">{{ error }}</div> }
+@if (data) {
+  <div class="stats-grid">
+    <article class="stat-card"><span class="stat-icon blue"><i class="bi bi-people"></i></span><small>TOTAL CUSTOMERS</small><strong>{{ data.customers }}</strong><a routerLink="/customers">View customers <i class="bi bi-arrow-right"></i></a></article>
+    <article class="stat-card"><span class="stat-icon gold"><i class="bi bi-scissors"></i></span><small>TOTAL ORDERS</small><strong>{{ data.orders }}</strong><a routerLink="/orders">View orders <i class="bi bi-arrow-right"></i></a></article>
+    <article class="stat-card"><span class="stat-icon orange"><i class="bi bi-hourglass-split"></i></span><small>IN PROGRESS</small><strong>{{ data.pending }}</strong><a routerLink="/orders">Track work <i class="bi bi-arrow-right"></i></a></article>
+    <article class="stat-card"><span class="stat-icon green"><i class="bi bi-check2-circle"></i></span><small>COMPLETED</small><strong>{{ data.completed }}</strong><a routerLink="/orders">Order history <i class="bi bi-arrow-right"></i></a></article>
+  </div>
+  <div class="stats-grid stats-grid-secondary">
+    <article class="metric-card"><i class="bi bi-calendar2-check"></i><span>Upcoming deliveries<strong>{{ data.upcoming }}</strong></span></article>
+    <article class="metric-card"><i class="bi bi-exclamation-circle"></i><span>Overdue deliveries<strong class="text-danger">{{ data.overdue }}</strong></span></article>
+    <article class="metric-card"><i class="bi bi-wallet2"></i><span>Payments collected<strong>₹{{ data.collected | number:'1.0-2' }}</strong></span></article>
+    <article class="metric-card"><i class="bi bi-cash-coin"></i><span>Outstanding balance<strong>₹{{ data.outstanding | number:'1.0-2' }}</strong></span></article>
+  </div>
+  <div class="dashboard-grid">
+    <section class="content-card">
+      <div class="card-heading"><div><span class="section-kicker">RECENT ACTIVITY</span><h2>Latest orders</h2></div><a routerLink="/orders">All orders <i class="bi bi-arrow-right"></i></a></div>
+      @if (data.recent.length) {
+        <div class="table-responsive"><table class="table app-table"><thead><tr><th>ORDER</th><th>CUSTOMER</th><th>DELIVERY</th><th>STATUS</th><th>TOTAL</th></tr></thead><tbody>
+          @for (order of data.recent; track order.id) { <tr><td><b>{{ order.order_number }}</b></td><td>{{ order.customer?.full_name || 'Customer' }}</td><td>{{ order.expected_delivery_date | date:'mediumDate' }}</td><td><span class="status-badge" [class]="statusClass(order.status)">{{ order.status }}</span></td><td>₹{{ order.total_amount | number:'1.0-2' }}</td></tr> }
+        </tbody></table></div>
+      } @else { <div class="empty-state"><i class="bi bi-receipt"></i><h3>No orders yet</h3><p>Your real orders will appear here once they are added.</p><a routerLink="/orders" class="text-link">Create your first order</a></div> }
+    </section>
+    <section class="content-card reminders">
+      <div class="card-heading"><div><span class="section-kicker">DELIVERY DESK</span><h2>Reminders</h2></div><i class="bi bi-bell"></i></div>
+      <div class="reminder-row"><span class="reminder-dot danger"></span><span><b>Overdue</b><small>Orders past expected delivery</small></span><strong>{{ data.overdue }}</strong></div>
+      <div class="reminder-row"><span class="reminder-dot gold"></span><span><b>Due this week</b><small>Upcoming customer deliveries</small></span><strong>{{ data.upcoming }}</strong></div>
+      <a routerLink="/orders" class="reminder-link">Review deliveries <i class="bi bi-arrow-right"></i></a>
+    </section>
+  </div>
+  <section class="content-card chart-card">
+    <div class="card-heading"><div><span class="section-kicker">LIVE WORKLOAD</span><h2>Orders by status</h2></div><i class="bi bi-bar-chart-line card-heading-icon"></i></div>
+    <div class="status-chart" role="img" aria-label="Order counts grouped by current status">
+      @for (item of data.statuses; track item.status) { <div class="chart-row"><span>{{ item.status }}</span><div class="chart-track"><div [class]="statusClass(item.status)" [style.width.%]="statusPercent(item.count)"></div></div><b>{{ item.count }}</b></div> }
+    </div>
+  </section>
+}

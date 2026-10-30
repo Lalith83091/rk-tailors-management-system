@@ -1,0 +1,83 @@
+<header class="site-nav">
+  <a class="brand-lockup" routerLink="/" aria-label="R.K. Tailors home">
+    <span class="brand-mark">RK</span><span><strong>R.K. TAILORS</strong><small>GENTS SPECIALIST</small></span>
+  </a>
+  <button class="nav-toggle" type="button" aria-label="Toggle navigation" (click)="menuOpen = !menuOpen"><i class="bi bi-list"></i></button>
+  <nav [class.open]="menuOpen">
+    <a routerLink="/" fragment="home" (click)="menuOpen = false">Home</a>
+    <a routerLink="/dashboard">Dashboard</a>
+    <a routerLink="/customers">Customers</a>
+    <a routerLink="/measurements">Measurements</a>
+    <a routerLink="/orders">Orders</a>
+    <a routerLink="/payments">Payments</a>
+    <a routerLink="/reports">Reports</a>
+    <a routerLink="/" fragment="contact" (click)="menuOpen = false">Contact</a>
+    <a class="nav-login" routerLink="/login">Admin Login <i class="bi bi-arrow-up-right"></i></a>
+  </nav>
+</header>
+
+<main id="home">
+  <section class="banner-wrap" aria-label="R.K. Tailors shop banner">
+    @if (!bannerMissing) {
+      <img class="shop-banner" src="/assets/images/rk-tailors-banner.png" alt="R.K. Tailors – Gents Specialist shop banner" (error)="bannerMissing = true">
+    } @else {
+      <div class="banner-missing" role="status"><i class="bi bi-image" aria-hidden="true"></i><span>Copy the original banner image to <code>src/assets/images/rk-tailors-banner.png</code>.</span></div>
+    }
+  </section>
+  <section class="home-hero">
+    <div class="hero-copy">
+      <span class="eyebrow"><span></span> GENTS SPECIALIST · ALMASGUDA</span>
+      <h1>Tailoring that fits<br><em>your character.</em></h1>
+      <p>Thoughtful craftsmanship, precise measurements and timeless style — made personally for you.</p>
+      <a class="gold-button" href="tel:9292151645">Book a fitting <i class="bi bi-arrow-up-right"></i></a>
+      <a class="text-link" routerLink="/" fragment="services">Explore our services <i class="bi bi-arrow-down"></i></a>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      <div class="hero-circle"></div><div class="hero-monogram">R<span>K</span></div>
+      <span class="hero-caption">MADE WITH<br>PRECISION</span>
+    </div>
+  </section>
+
+  <section class="intro-section">
+    <div class="section-kicker">THE R.K. PROMISE</div>
+    <div class="intro-grid">
+      <h2>Every stitch tells<br>a <em>better story.</em></h2>
+      <p>At R.K. Tailors, we believe the finest clothing starts with listening. From the first measurement to the final fitting, our experienced hands make garments that feel as good as they look.</p>
+    </div>
+    <div class="promise-row">
+      <article><span>01</span><h3>Personal fit</h3><p>Measurements taken with care and kept for your next visit.</p></article>
+      <article><span>02</span><h3>Honest craft</h3><p>Quality stitching, considered details and a finish that lasts.</p></article>
+      <article><span>03</span><h3>Made for you</h3><p>Your fabric, your style and your schedule — all in one place.</p></article>
+    </div>
+  </section>
+
+  <section class="services-section" id="services">
+    <div class="section-kicker">WHAT WE MAKE</div><h2>Crafted for every <em>occasion.</em></h2>
+    <div class="service-grid">
+      <article><i class="bi bi-person-standing"></i><h3>Shirts & trousers</h3><p>Everyday essentials shaped to your exact fit.</p></article>
+      <article><i class="bi bi-stars"></i><h3>Suits & blazers</h3><p>Refined formalwear for your most important moments.</p></article>
+      <article><i class="bi bi-flower1"></i><h3>Kurtas & pajamas</h3><p>Traditional silhouettes finished with modern precision.</p></article>
+      <article><i class="bi bi-award"></i><h3>Sherwanis</h3><p>Distinctive occasion wear, tailored to make an entrance.</p></article>
+    </div>
+  </section>
+
+  <section class="how-section">
+    <div class="section-kicker">A SIMPLE PROCESS</div><h2>From first fitting to <em>perfect finish.</em></h2>
+    <div class="steps-row">
+      <article><b>01</b><h3>Come say hello</h3><p>Share what you have in mind and choose your fabric.</p></article>
+      <article><b>02</b><h3>We measure</h3><p>We record your fit and confirm all the details together.</p></article>
+      <article><b>03</b><h3>Made with care</h3><p>Your garment is cut, stitched and finished by our team.</p></article>
+      <article><b>04</b><h3>Ready for you</h3><p>Try it on, make any adjustments and take it home.</p></article>
+    </div>
+  </section>
+
+  <section class="contact-section" id="contact">
+    <div><div class="section-kicker">VISIT OUR SHOP</div><h2>Let's make something<br><em>that fits.</em></h2><p>Proprietor: V. Purushottam</p><a class="gold-button" href="https://maps.google.com/?q=Shop+No+1+Plot+No+65+66+Almasguda" target="_blank" rel="noopener">Get directions <i class="bi bi-arrow-up-right"></i></a></div>
+    <div class="contact-card">
+      <div><i class="bi bi-telephone"></i><span><small>CALL US</small><a href="tel:9292151645">92921 51645</a></span></div>
+      <div><i class="bi bi-geo-alt"></i><span><small>FIND US</small><p>Shop No 1, Plot No 65&amp;66, Almasguda,<br>Beside Tecnia High School, Opposite Vashista The School.</p></span></div>
+      <div><i class="bi bi-clock"></i><span><small>VISIT IN PERSON</small><p>We look forward to welcoming you.</p></span></div>
+    </div>
+  </section>
+</main>
+<footer class="site-footer"><a class="brand-lockup" routerLink="/"><span class="brand-mark">RK</span><span><strong>R.K. TAILORS</strong><small>GENTS SPECIALIST</small></span></a><span>© {{ year }} R.K. Tailors · Almasguda</span><a routerLink="/login">Staff sign in <i class="bi bi-arrow-up-right"></i></a></footer>

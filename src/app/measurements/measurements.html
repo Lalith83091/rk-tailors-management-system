@@ -1,0 +1,32 @@
+<div class="page-heading"><div><span class="section-kicker">PRECISION, PRESERVED</span><h1>Measurement <em>book.</em></h1><p>Keep a dated fit profile for every customer and garment.</p></div></div>
+@if (error) { <div class="alert alert-danger" role="alert">{{ error }}</div> }
+@if (message) { <div class="alert alert-success" role="status">{{ message }}</div> }
+<section class="content-card">
+  <div class="card-heading"><div><span class="section-kicker">NEW MEASUREMENT VERSION</span><h2>Record a fitting</h2></div><button class="btn btn-light" type="button" (click)="copyPrevious()"><i class="bi bi-copy"></i> Copy previous</button></div>
+  @if (!customers.length && !loading) { <div class="empty-state"><i class="bi bi-person-plus"></i><h3>Add a customer first</h3><p>Measurements are always saved against a customer profile.</p><a class="text-link" routerLink="/customers">Open customer directory</a></div> }
+  <form [formGroup]="form" (ngSubmit)="save()" class="form-grid">
+    <label>Customer *<select formControlName="customer_id"><option value="">Choose customer</option>@for (customer of customers; track customer.id) { <option [value]="customer.id">{{ customer.full_name }} · {{ customer.mobile_number }}</option> }</select></label>
+    <label>Garment type *<select formControlName="garment_type" (change)="changeType($any($event.target).value)">@for (type of types; track type) { <option [value]="type">{{ type }}</option> }</select></label>
+    <label>Unit<select [value]="form.controls.unit.value" (change)="changeUnit($any($event.target).value)"><option value="in">Inches</option><option value="cm">Centimeters</option></select></label>
+    <label>Fit type<select formControlName="fit_type"><option>Regular</option><option>Slim</option><option>Relaxed</option><option>Custom</option></select></label>
+    @for (field of fields; track field[0]) { <label>{{ field[1] }}<input type="number" step="0.1" min="0" max="500" [formControlName]="field[0]" inputmode="decimal" placeholder="0.0"></label> }
+    <div class="custom-measurements form-span"><div class="card-heading compact"><div><span class="section-kicker">OPTIONAL DIMENSIONS</span><h3>Custom measurements</h3></div><button class="btn btn-light" type="button" (click)="addCustomField()"><i class="bi bi-plus-lg"></i> Add field</button></div>
+      @for (field of customFields; track $index) { <div class="custom-measurement-row"><label>Field name<input [value]="field.name" (input)="updateCustomField($index, 'name', $event)" placeholder="e.g. Pocket depth"></label><label>Value ({{ form.controls.unit.value }})<input type="number" min="0" step="0.1" [value]="field.value ?? ''" (input)="updateCustomField($index, 'value', $event)"></label><button class="icon-button danger-icon" type="button" aria-label="Remove custom measurement" (click)="customFields.splice($index, 1)"><i class="bi bi-trash"></i></button></div> }
+    </div>
+    <label>Measurement date<input type="date" formControlName="measured_at"></label>
+    <label class="form-span">Notes<textarea rows="2" formControlName="notes" placeholder="Fit preferences or fitting notes"></textarea></label>
+    <div class="form-actions form-span"><button class="gold-button" type="submit" [disabled]="saving || !customers.length">{{ saving ? 'Saving…' : 'Save new version' }} <i class="bi bi-check2"></i></button></div>
+  </form>
+</section>
+<section class="content-card">
+  <div class="card-heading"><div><span class="section-kicker">LATEST SAVED FITS</span><h2>Measurement profiles</h2></div></div>
+  @if (loading) { <div class="loading-state"><span class="spinner-border spinner-border-sm"></span> Loading profiles…</div> }
+  @else if (profiles.length) { <div class="table-responsive"><table class="table app-table"><thead><tr><th>CUSTOMER</th><th>GARMENT</th><th>MEASURED</th><th>VERSION</th><th>FIT</th><th></th></tr></thead><tbody>@for (profile of profiles; track profile.id) { <tr><td>{{ customerName(profile.customer_id) }}</td><td>{{ profile.garment_type }}</td><td>{{ profile.measured_at | date:'mediumDate' }}</td><td><span class="version-pill">v{{ profile.version }}</span></td><td>{{ profile.fit_type || '—' }} · {{ profile.unit }}</td><td><button class="icon-button" type="button" [attr.aria-label]="'Edit latest ' + profile.garment_type + ' measurements'" (click)="editLatest(profile)"><i class="bi bi-pencil"></i></button></td></tr> }</tbody></table></div> }
+  @else { <div class="empty-state"><i class="bi bi-rulers"></i><h3>No measurements yet</h3><p>New measurement profiles appear here after the first fitting.</p></div> }
+</section>
+<section class="content-card">
+  <div class="card-heading"><div><span class="section-kicker">IMMUTABLE FIT RECORDS</span><h2>Version history</h2></div></div>
+  @if (versions.length) { <div class="table-responsive"><table class="table app-table"><thead><tr><th>CUSTOMER</th><th>GARMENT</th><th>MEASURED</th><th>VERSION</th><th>MEASUREMENTS</th></tr></thead><tbody>
+    @for (version of versions; track version.id) { <tr><td>{{ customerName(version.profile.customer_id) }}</td><td>{{ version.profile.garment_type }}</td><td>{{ version.measured_at | date:'mediumDate' }}</td><td><span class="version-pill">v{{ version.version }}</span></td><td>{{ versionSummary(version.measurements) }} · {{ version.unit }}</td></tr> }
+  </tbody></table></div> } @else { <div class="empty-state"><p>No historical measurement versions have been saved.</p></div> }
+</section>

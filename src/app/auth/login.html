@@ -1,0 +1,21 @@
+<main class="login-page">
+  <section class="login-card">
+    <a class="brand-lockup" routerLink="/"><span class="brand-mark">RK</span><span><strong>R.K. TAILORS</strong><small>GENTS SPECIALIST</small></span></a>
+    <div class="login-heading"><span class="section-kicker">STAFF PORTAL</span><h1>Welcome <em>back.</em></h1><p>Sign in to manage your shop workspace.</p></div>
+    @if (!supabase.configured) {
+      <div class="alert alert-warning" role="alert"><b>Supabase setup required.</b><br>Configure your project URL and publishable anon key in <code>src/environments/environment.ts</code> and apply the database migration.</div>
+    }
+    @if (error) { <div class="alert alert-danger" role="alert">{{ error }}</div> }
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <label for="email">Email address</label>
+      <input id="email" type="email" autocomplete="username" formControlName="email" placeholder="admin@example.com">
+      @if (form.controls.email.touched && form.controls.email.invalid) { <small class="field-error">Enter a valid email address.</small> }
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password" formControlName="password" placeholder="Your password">
+      @if (form.controls.password.touched && form.controls.password.invalid) { <small class="field-error">Password is required.</small> }
+      <button class="gold-button login-submit" type="submit" [disabled]="submitting || !supabase.configured">{{ submitting ? 'Signing in…' : 'Sign in securely' }} <i class="bi bi-arrow-right"></i></button>
+    </form>
+    <a class="login-home" routerLink="/"><i class="bi bi-arrow-left"></i> Return to shop website</a>
+  </section>
+  <aside class="login-aside"><div class="login-aside-mark">RK</div><p>Cut with care.<br><em>Made to measure.</em></p><span>R.K. TAILORS · ALMASGUDA</span></aside>
+</main>

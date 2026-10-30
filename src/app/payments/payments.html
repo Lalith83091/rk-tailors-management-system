@@ -1,0 +1,23 @@
+<div class="page-heading"><div><span class="section-kicker">EVERY RUPEE ACCOUNTED FOR</span><h1>Payments & <em>balances.</em></h1><p>Record transactions and see what remains due.</p></div></div>
+@if (error) { <div class="alert alert-danger" role="alert">{{ error }}</div> }
+@if (message) { <div class="alert alert-success" role="status">{{ message }}</div> }
+<section class="content-card">
+  <div class="card-heading"><div><span class="section-kicker">RECORD TRANSACTION</span><h2>Add a payment</h2></div><i class="bi bi-wallet2 card-heading-icon"></i></div>
+  <form [formGroup]="form" (ngSubmit)="save()" class="form-grid payment-form">
+    <label class="form-span">Order *<select formControlName="order_id"><option value="">Select an outstanding order</option>@for (order of orders; track order.id) { @if (balance(order) > 0) { <option [value]="order.id">{{ order.order_number }} · {{ order.customer?.full_name }} · due ₹{{ balance(order) | number:'1.0-2' }}</option> } }</select></label>
+    @if (selectedOrder) { <div class="balance-notice form-span">Outstanding balance for {{ selectedOrder.order_number }}: <strong>₹{{ balance(selectedOrder) | number:'1.0-2' }}</strong></div> }
+    <label>Amount (₹) *<input type="number" formControlName="amount" min="0.01" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+    <label>Payment method<select formControlName="method">@for (method of methods; track method) { <option [value]="method">{{ method }}</option> }</select></label>
+    <label>Reference / transaction ID<input formControlName="reference" placeholder="Optional"></label>
+    <div class="form-actions form-span"><button class="gold-button" type="submit" [disabled]="saving">{{ saving ? 'Recording…' : 'Record payment' }} <i class="bi bi-check2"></i></button></div>
+  </form>
+</section>
+<section class="content-card">
+  <div class="card-heading"><div><span class="section-kicker">ORDER LEDGER</span><h2>Balances & payment history</h2></div></div>
+  @if (loading) { <div class="loading-state"><span class="spinner-border spinner-border-sm"></span> Loading payments…</div> }
+  @else if (orders.length) { <div class="table-responsive"><table class="table app-table"><thead><tr><th>ORDER / CUSTOMER</th><th>TOTAL</th><th>RECEIVED</th><th>BALANCE DUE</th><th>PAYMENT HISTORY</th></tr></thead><tbody>
+    @for (order of orders; track order.id) {
+      <tr><td><b>{{ order.order_number }}</b><small>{{ order.customer?.full_name }}</small></td><td>₹{{ order.total_amount | number:'1.0-2' }}</td><td>₹{{ (order.total_amount - balance(order)) | number:'1.0-2' }}</td><td><b [class.text-success]="balance(order) === 0" [class.text-danger]="balance(order) > 0">₹{{ balance(order) | number:'1.0-2' }}</b></td><td>@for (payment of order.payments; track payment.id) { <span class="payment-history-line">{{ payment.paid_at | date:'short' }} · {{ payment.method }} · ₹{{ payment.amount | number:'1.0-2' }}</span> } @empty { <span class="muted">No payments yet</span> }</td></tr>
+    }
+  </tbody></table></div> } @else { <app-empty-state icon="bi bi-credit-card" title="No payments yet" description="Transactions will appear here after an order is created." /> }
+</section>

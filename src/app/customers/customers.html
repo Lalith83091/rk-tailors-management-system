@@ -1,0 +1,36 @@
+<div class="page-heading"><div><span class="section-kicker">YOUR CLIENT BOOK</span><h1>Customer <em>directory.</em></h1><p>Keep every fitting and relationship close at hand.</p></div><button class="gold-button" type="button" (click)="newCustomer()"><i class="bi bi-person-plus"></i> Add customer</button></div>
+@if (error) { <div class="alert alert-danger" role="alert">{{ error }}</div> }
+@if (message) { <div class="alert alert-success" role="status">{{ message }}</div> }
+@if (panelOpen) {
+  <section class="content-card form-panel">
+    <div class="card-heading"><div><span class="section-kicker">{{ editing ? 'UPDATE RECORD' : 'NEW CLIENT' }}</span><h2>{{ editing ? 'Edit customer' : 'Add a customer' }}</h2></div><button class="icon-button" type="button" (click)="panelOpen = false" aria-label="Close form"><i class="bi bi-x-lg"></i></button></div>
+    <form [formGroup]="form" (ngSubmit)="save()" class="form-grid">
+      <label>Full name *<input formControlName="full_name" autocomplete="name" placeholder="Customer name"></label>
+      <label>Mobile number *<input formControlName="mobile_number" inputmode="tel" autocomplete="tel" placeholder="10-digit mobile number"></label>
+      <label>Alternate number<input formControlName="alternate_number" inputmode="tel" placeholder="Optional"></label>
+      <label>Address<input formControlName="address" autocomplete="street-address" placeholder="Area, city"></label>
+      <label class="form-span">Notes<textarea formControlName="notes" rows="2" placeholder="Preferences or useful notes"></textarea></label>
+      @if (form.controls.full_name.touched && form.controls.full_name.invalid) { <small class="field-error">Full name is required.</small> }
+      @if (form.controls.mobile_number.touched && form.controls.mobile_number.invalid) { <small class="field-error">Enter a valid phone number.</small> }
+      @if (form.controls.alternate_number.touched && form.controls.alternate_number.invalid) { <small class="field-error">Enter a valid alternate phone number.</small> }
+      <div class="form-actions form-span"><button class="btn btn-light" type="button" (click)="panelOpen = false">Cancel</button><button class="gold-button" type="submit" [disabled]="saving">{{ saving ? 'Saving…' : 'Save customer' }}</button></div>
+    </form>
+  </section>
+}
+<section class="content-card">
+  <div class="list-toolbar"><div><span class="section-kicker">ACTIVE RECORDS</span><h2>{{ customers.length }} customers</h2></div><label class="search-box"><i class="bi bi-search"></i><input aria-label="Search customers" placeholder="Search name, mobile or ID" [value]="search" (input)="onSearch($event)"></label></div>
+  @if (loading) { <div class="loading-state"><span class="spinner-border spinner-border-sm"></span> Loading customers…</div> }
+  @else if (customers.length) {
+    <div class="table-responsive"><table class="table app-table"><thead><tr><th>CUSTOMER</th><th>MOBILE</th><th>ADDRESS</th><th>ADDED</th><th class="text-end">ACTIONS</th></tr></thead><tbody>
+      @for (customer of customers; track customer.id) {
+        <tr><td><button class="table-link" type="button" (click)="viewProfile(customer)"><b>{{ customer.full_name }}</b><small>{{ customer.customer_number }}</small></button></td><td><a [href]="'tel:' + customer.mobile_number">{{ customer.mobile_number }}</a></td><td>{{ customer.address || '—' }}</td><td>{{ customer.created_at | date:'mediumDate' }}</td><td class="text-end"><button class="icon-button" type="button" aria-label="Edit customer" (click)="editCustomer(customer)"><i class="bi bi-pencil"></i></button><button class="icon-button danger-icon" type="button" aria-label="Archive customer" (click)="archive(customer)"><i class="bi bi-archive"></i></button></td></tr>
+      }
+    </tbody></table></div>
+  } @else { <app-empty-state icon="bi bi-person-plus" title="No customers found" description="Add a client to start their tailoring history." actionLabel="Add your first customer" (action)="newCustomer()" /> }
+</section>
+@if (selected) {
+  <section class="content-card profile-card">
+    <div class="card-heading"><div><span class="section-kicker">CUSTOMER PROFILE</span><h2>{{ selected.full_name }}</h2><p>{{ selected.customer_number }} · {{ selected.mobile_number }}</p></div><button class="icon-button" type="button" (click)="selected = null" aria-label="Close profile"><i class="bi bi-x-lg"></i></button></div>
+    <div class="history-grid"><div><h3><i class="bi bi-rulers"></i> Measurement history</h3>@for (measurement of historyMeasurements; track measurement.id) { <p>{{ measurement.profile.garment_type }} · {{ measurement.measured_at | date:'mediumDate' }} · v{{ measurement.version }} · {{ measurement.unit }}</p> } @empty { <p class="muted">No saved measurements.</p> }</div><div><h3><i class="bi bi-receipt"></i> Stitching orders</h3>@for (order of historyOrders; track order.id) { <p>{{ order.order_number }} · {{ order.status }} · {{ order.order_date | date:'mediumDate' }}</p> } @empty { <p class="muted">No previous orders.</p> }</div></div>
+  </section>
+}

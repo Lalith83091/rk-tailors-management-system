@@ -1,0 +1,73 @@
+<div class="page-heading"><div><span class="section-kicker">CUT · STITCH · DELIVER</span><h1>Stitching <em>orders.</em></h1><p>Every garment, fit and promised delivery in one place.</p></div><button class="gold-button" type="button" (click)="showForm = !showForm"><i class="bi bi-plus-lg"></i> New order</button></div>
+@if (error) { <div class="alert alert-danger" role="alert">{{ error }}</div> }
+@if (message) { <div class="alert alert-success" role="status">{{ message }}</div> }
+@if (showForm) {
+  <section class="content-card form-panel">
+    <div class="card-heading"><div><span class="section-kicker">NEW STITCHING ORDER</span><h2>Order details</h2></div><button type="button" class="icon-button" aria-label="Close form" (click)="showForm = false"><i class="bi bi-x-lg"></i></button></div>
+    <div class="quick-add-toggle"><label><input type="checkbox" [checked]="quickAdd" (change)="quickAdd = !quickAdd"> Add a new customer with this order</label></div>
+    <form [formGroup]="form" (ngSubmit)="create()" class="form-grid">
+      @if (quickAdd) {
+        <label>Customer name *<input formControlName="new_customer_name" placeholder="Full name"></label>
+        <label>Mobile number *<input formControlName="new_customer_mobile" inputmode="tel" placeholder="10-digit number"></label>
+      } @else {
+        <label class="form-span">Select customer *<select formControlName="customer_id" (change)="customerChanged($event)"><option value="">Choose customer</option>@for (customer of customers; track customer.id) { <option [value]="customer.id">{{ customer.full_name }} · {{ customer.mobile_number }}</option> }</select></label>
+      }
+      <label>Order date<input type="date" formControlName="order_date"></label>
+      <label>Expected delivery date *<input type="date" formControlName="expected_delivery_date"></label>
+      <label>Discount (₹)<input type="number" min="0" step="0.01" formControlName="discount"></label>
+      <label>Advance payment (₹)<input type="number" min="0" step="0.01" formControlName="advance_amount"></label>
+      <label>Advance method<select formControlName="advance_method"><option>Cash</option><option>UPI</option><option>Card</option><option>Other</option></select></label>
+      <div class="form-span item-builder">
+        <div class="card-heading compact"><div><span class="section-kicker">GARMENTS</span><h3>Items in this order</h3></div><button type="button" class="btn btn-light" (click)="addItem()"><i class="bi bi-plus-lg"></i> Add item</button></div>
+        @for (item of items; track $index) {
+          <div class="item-row">
+            <label>Garment<select [value]="item.garment_type" (change)="updateItem($index, 'garment_type', $event)">@for (garment of garments; track garment) { <option [value]="garment">{{ garment }}</option> }</select></label>
+            <label>Qty<input type="number" min="1" step="1" [value]="item.quantity" (input)="updateItem($index, 'quantity', $event)"></label>
+            <label>Charge each (₹)<input type="number" min="0" step="0.01" [value]="item.stitching_charge" (input)="updateItem($index, 'stitching_charge', $event)"></label>
+            <span class="item-total">₹{{ item.quantity * item.stitching_charge | number:'1.0-2' }}</span>
+            <button type="button" class="icon-button danger-icon" aria-label="Remove item" (click)="removeItem($index)" [disabled]="items.length < 2"><i class="bi bi-trash"></i></button>
+            <small class="item-measurement">{{ hasProfile(item.garment_type) ? 'Latest saved measurement will be snapshotted for this garment.' : 'No saved fit found; order will retain an empty measurement snapshot.' }}</small>
+          </div>
+        }
+        <div class="order-total-preview"><span>Estimated total after discount</span><strong>₹{{ totalAfterDiscount | number:'1.0-2' }}</strong></div>
+      </div>
+      <label class="form-span">Special instructions<textarea rows="2" formControlName="special_instructions" placeholder="Fabric, style or fitting instructions"></textarea></label>
+      <label class="form-span">Internal order notes<textarea rows="2" formControlName="notes"></textarea></label>
+      <div class="form-actions form-span"><button class="gold-button" type="submit" [disabled]="saving">{{ saving ? 'Creating…' : 'Create order & receipt' }} <i class="bi bi-check2"></i></button></div>
+    </form>
+  </section>
+}
+<section class="content-card">
+  <div class="list-toolbar orders-toolbar"><div><span class="section-kicker">WORK IN PROGRESS</span><h2>{{ filteredOrders.length }} orders</h2></div><div class="toolbar-filters">
+    <label class="search-box"><i class="bi bi-search"></i><input aria-label="Search orders" placeholder="Order, customer or mobile" [value]="search" (input)="search = $any($event.target).value"></label>
+    <select aria-label="Filter by status" [value]="statusFilter" (change)="statusFilter = $any($event.target).value"><option value="">All statuses</option>@for (status of statuses; track status) { <option [value]="status">{{ status }}</option> }</select>
+    <select aria-label="Filter deliveries" [value]="dueFilter" (change)="dueFilter = $any($event.target).value"><option value="all">All deliveries</option><option value="upcoming">Due this week</option><option value="overdue">Overdue</option></select>
+  </div></div>
+  @if (loading) { <div class="loading-state"><span class="spinner-border spinner-border-sm"></span> Loading orders…</div> }
+  @else if (filteredOrders.length) { <div class="table-responsive"><table class="table app-table"><thead><tr><th>ORDER / CUSTOMER</th><th>GARMENTS</th><th>DELIVERY</th><th>STATUS</th><th>BALANCE</th><th></th></tr></thead><tbody>
+    @for (order of filteredOrders; track order.id) {
+      <tr><td><button class="table-link" type="button" (click)="showOrder(order)"><b>{{ order.order_number }}</b><small>{{ order.customer?.full_name }} · {{ order.customer?.mobile_number }}</small></button></td><td>{{ order.order_items?.length || 0 }} item(s)</td><td>{{ order.expected_delivery_date | date:'mediumDate' }}</td><td><select class="status-select" [value]="order.status" [disabled]="updatingId === order.id" [attr.aria-label]="'Update status for ' + order.order_number" (change)="changeStatus(order, $event)">@for (status of statuses; track status) { <option [value]="status">{{ status }}</option> }</select></td><td>₹{{ orderBalance(order) | number:'1.0-2' }}</td><td><button class="icon-button" type="button" aria-label="View order receipt" (click)="showOrder(order)"><i class="bi bi-eye"></i></button></td></tr>
+    }
+  </tbody></table></div> } @else { <app-empty-state icon="bi bi-scissors" title="No matching orders" description="New stitching orders will appear here." actionLabel="Create an order" (action)="showForm = true" /> }
+</section>
+@if (selected) {
+  <div class="receipt-overlay" role="dialog" aria-modal="true" aria-label="Order receipt">
+    <section class="receipt-sheet">
+      <div class="receipt-actions no-print"><button class="btn btn-light" type="button" (click)="selected = null"><i class="bi bi-arrow-left"></i> Back</button><button class="gold-button" type="button" (click)="printReceipt()"><i class="bi bi-printer"></i> Print / Save PDF</button></div>
+      <header class="receipt-header"><span class="brand-mark">RK</span><div><h1>R.K. TAILORS</h1><strong>GENTS SPECIALIST</strong><p>Proprietor: V. Purushottam · 9292151645</p><p>Shop No 1, Plot No 65&amp;66, Almasguda, Beside Tecnia High School, Opposite Vashista The School.</p></div></header>
+      <div class="receipt-title"><span>STITCHING ORDER RECEIPT</span><b>{{ selected.order_number }}</b></div>
+      <div class="receipt-customer"><div><small>CUSTOMER</small><b>{{ selected.customer?.full_name }}</b><span>{{ selected.customer?.mobile_number }}</span><span>{{ selected.customer?.address }}</span></div><div><small>ORDER DATE</small><b>{{ selected.order_date | date:'mediumDate' }}</b><small>EXPECTED DELIVERY</small><b>{{ selected.expected_delivery_date | date:'mediumDate' }}</b></div></div>
+      <h3>Garments & measurements</h3>
+      @for (item of selected.order_items; track item.id) {
+        <div class="receipt-item"><div><b>{{ item.garment_type }}</b><span>Qty {{ item.quantity }} · ₹{{ item.stitching_charge | number:'1.0-2' }} each</span></div><strong>₹{{ item.quantity * item.stitching_charge | number:'1.0-2' }}</strong>
+          @if (item.measurement_snapshot['measurements']) { <small>Measurement snapshot v{{ item.measurement_snapshot['version'] }} · {{ item.measurement_snapshot['unit'] }} · {{ measurementSummary(item.measurement_snapshot) }}</small> }
+          @else { <small>No measurement profile was available at order creation.</small> }
+        </div>
+      }
+      @if (selected.special_instructions) { <p><b>Instructions:</b> {{ selected.special_instructions }}</p> }
+      <div class="receipt-summary">@if (selected.discount > 0) { <span>Discount <b>− ₹{{ selected.discount | number:'1.0-2' }}</b></span> }<span>Order total <b>₹{{ selected.total_amount | number:'1.0-2' }}</b></span><span>Payments received <b>₹{{ (selected.total_amount - orderBalance(selected)) | number:'1.0-2' }}</b></span><span>Balance due <b>₹{{ orderBalance(selected) | number:'1.0-2' }}</b></span></div>
+      <h3>Payment history</h3>@for (payment of selected.payments; track payment.id) { <p class="receipt-payment">{{ payment.paid_at | date:'medium' }} · {{ payment.method }} <b>₹{{ payment.amount | number:'1.0-2' }}</b></p> } @empty { <p>No payments recorded yet.</p> }
+      <footer class="receipt-footer">Thank you for choosing R.K. Tailors. Crafted with care, made to fit.</footer>
+    </section>
+  </div>
+}

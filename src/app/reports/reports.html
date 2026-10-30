@@ -1,0 +1,33 @@
+<div class="page-heading"><div><span class="section-kicker">CLEAR NUMBERS, BETTER DECISIONS</span><h1>Shop <em>reports.</em></h1><p>Live order, payment and delivery summaries from your shop data.</p></div><button class="gold-button" type="button" (click)="exportCsv()" [disabled]="!filtered.length"><i class="bi bi-download"></i> Export CSV</button></div>
+@if (error) { <div class="alert alert-danger" role="alert">{{ error }}</div> }
+<section class="content-card report-filters">
+  <div class="quick-ranges"><button type="button" class="btn btn-light" (click)="setRange('daily')">Today</button><button type="button" class="btn btn-light" (click)="setRange('weekly')">Last 7 days</button><button type="button" class="btn btn-light" (click)="setRange('monthly')">This month</button></div>
+  <label>From<input type="date" [value]="startDate" (change)="startDate = $any($event.target).value"></label>
+  <label>To<input type="date" [value]="endDate" (change)="endDate = $any($event.target).value"></label>
+  <label>Customer history<select [value]="customerFilter" (change)="customerFilter = $any($event.target).value"><option value="">All customers</option>@for (customer of customers; track customer.id) { <option [value]="customer.id">{{ customer.full_name }} · {{ customer.mobile_number }}</option> }</select></label>
+</section>
+@if (loading) { <div class="loading-state"><span class="spinner-border spinner-border-sm"></span> Preparing reports…</div> }
+@else {
+  <div class="stats-grid">
+    <article class="stat-card"><span class="stat-icon blue"><i class="bi bi-receipt"></i></span><small>ORDERS IN RANGE</small><strong>{{ filtered.length }}</strong><span>Filtered by order date</span></article>
+    <article class="stat-card"><span class="stat-icon green"><i class="bi bi-cash-stack"></i></span><small>PAYMENTS RECEIVED</small><strong>₹{{ received | number:'1.0-2' }}</strong><span>Transactions in range</span></article>
+    <article class="stat-card"><span class="stat-icon gold"><i class="bi bi-truck"></i></span><small>PENDING DELIVERIES</small><strong>{{ pendingDeliveries.length }}</strong><span>Not yet delivered or cancelled</span></article>
+    <article class="stat-card"><span class="stat-icon orange"><i class="bi bi-wallet2"></i></span><small>OUTSTANDING (ALL ORDERS)</small><strong>₹{{ outstanding | number:'1.0-2' }}</strong><span>{{ dueOrders.length }} orders with a balance due</span></article>
+  </div>
+  <section class="content-card">
+    <div class="card-heading"><div><span class="section-kicker">ORDER & PAYMENT DETAIL</span><h2>{{ startDate | date:'mediumDate' }} — {{ endDate | date:'mediumDate' }}</h2></div></div>
+    @if (filtered.length) { <div class="table-responsive"><table class="table app-table"><thead><tr><th>ORDER</th><th>CUSTOMER</th><th>ORDER DATE</th><th>DELIVERY</th><th>STATUS</th><th>PAYMENTS</th><th>BALANCE</th></tr></thead><tbody>
+      @for (order of filtered; track order.id) { <tr><td><b>{{ order.order_number }}</b></td><td>{{ order.customer?.full_name }}</td><td>{{ order.order_date | date:'mediumDate' }}</td><td>{{ order.expected_delivery_date | date:'mediumDate' }}</td><td>{{ order.status }}</td><td>₹{{ paymentsInRange(order) | number:'1.0-2' }}</td><td>₹{{ balance(order) | number:'1.0-2' }}</td></tr> }
+    </tbody></table></div> } @else { <div class="empty-state"><i class="bi bi-bar-chart"></i><h3>No activity in this date range</h3><p>Choose another range to see shop reports.</p></div> }
+  </section>
+  <section class="content-card">
+    <div class="card-heading"><div><span class="section-kicker">DELIVERIES DUE IN RANGE</span><h2>Pending delivery report</h2></div><strong>{{ pendingDeliveries.length }} orders</strong></div>
+    @if (pendingDeliveries.length) { <div class="table-responsive"><table class="table app-table"><thead><tr><th>ORDER</th><th>CUSTOMER</th><th>DUE DATE</th><th>STATUS</th></tr></thead><tbody>@for (order of pendingDeliveries; track order.id) { <tr><td>{{ order.order_number }}</td><td>{{ order.customer?.full_name }}</td><td>{{ order.expected_delivery_date | date:'mediumDate' }}</td><td>{{ order.status }}</td></tr> }</tbody></table></div> }
+    @else { <div class="empty-state"><p>No pending deliveries fall in this range.</p></div> }
+  </section>
+  <section class="content-card">
+    <div class="card-heading"><div><span class="section-kicker">UNPAID ORDER BALANCES</span><h2>Outstanding payments</h2></div><strong>₹{{ outstanding | number:'1.0-2' }}</strong></div>
+    @if (dueOrders.length) { <div class="table-responsive"><table class="table app-table"><thead><tr><th>ORDER</th><th>CUSTOMER</th><th>STATUS</th><th>OUTSTANDING</th></tr></thead><tbody>@for (order of dueOrders; track order.id) { <tr><td>{{ order.order_number }}</td><td>{{ order.customer?.full_name }} · {{ order.customer?.mobile_number }}</td><td>{{ order.status }}</td><td>₹{{ balance(order) | number:'1.0-2' }}</td></tr> }</tbody></table></div> }
+    @else { <div class="empty-state"><p>No outstanding payments for the selected customer.</p></div> }
+  </section>
+}
